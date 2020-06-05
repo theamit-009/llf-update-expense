@@ -528,6 +528,9 @@
     
     
                   let airBusRailFare = responseData.airBusRailFare;
+                  if(typeof(airBusRailFare) != 'undefined'){
+
+                  
                   console.log('airBusRailFare  '+JSON.stringify(airBusRailFare));
                   let airBusRailFareHtml = '';
                   if(airBusRailFare.length > 0)
@@ -555,9 +558,13 @@
                     
                     $('#airRailBusTable').html(airBusRailFareHtml);
                   }
+                }
     
     
                   let conveyanceCharges = responseData.conveyanceCharges;
+                  if(typeof(conveyanceCharges) != 'undefined'){
+
+                  
                   console.log('conveyanceCharges  '+JSON.stringify(conveyanceCharges));
                   if(conveyanceCharges.length > 0)
                   {
@@ -579,8 +586,10 @@
                     
                     $('#conveyanceChargesTable').html(conveyanceChargesHtml);
                   }
+                }
     
                   let boardingLodgingCharges = responseData.boardingLodgingCharges;
+                if(typeof(boardingLodgingCharges) != 'undefined') {
                   console.log('boardingLodgingCharges  '+JSON.stringify(boardingLodgingCharges));
                   if(boardingLodgingCharges.length > 0)
                   {
@@ -596,13 +605,15 @@
                         boardingLodgingChargesHtml += '<td>'+eachBoardingLodging.place_journey__c+'</td>';  
                         boardingLodgingChargesHtml += '</tr>';
                     });
-                    boardingLodgingChargesHtml+='<tr ><td colspan="4"><center><a target="_blank" href="/expense/tourBillClaim/boardingLodgingListView?tourBillClaimId='+tourBillClaimId+'" >View All</a></center></td></tr>';
+                    boardingLodgingChargesHtml +='<tr ><td colspan="4"><center><a target="_blank" href="/expense/tourBillClaim/boardingLodgingListView?tourBillClaimId='+tourBillClaimId+'" >View All</a></center></td></tr>';
                     boardingLodgingChargesHtml += '</tbody>'
 
                     $('#boardingLodgingChargesTable').html(boardingLodgingChargesHtml);
                   }
+                }
     
                   let telephoneFoodCharges = responseData.telephoneFoodCharges;
+              if(typeof(telephoneFoodCharges) != 'undefined'){
                   console.log('telephoneFoodCharges  '+JSON.stringify(telephoneFoodCharges));
                   if(telephoneFoodCharges.length > 0)
                   {
@@ -625,8 +636,13 @@
 
                     $('#telephoneFoodChargesTable').html(telephoneFoodChargesHtml);
                   }
-    
+              }
+
                   let miscellenousCharges = responseData.miscellenousCharges;
+                  if(typeof(miscellenousCharges) != 'undefined')
+                  {
+
+
                   console.log('miscellenousCharges   '+JSON.stringify(miscellenousCharges));
                   if(miscellenousCharges.length > 0)
                   {
@@ -651,6 +667,7 @@
 
                     $('#miscellaneousChargesTable').html(miscellenousChargesHtml);
                   } 
+                }
               })
               .fail((jqXHR, textStatus, err) => {
                 $('#tourBillClaimTableSpinner').hide(); 

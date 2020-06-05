@@ -14,7 +14,7 @@ router.get('/expenseApprovals',verify, (request, response) => {
 
 router.get('/expenseApprovalsList',verify, (request, response) => {
     let objUser = request.user;
-    pool.query('SELECT Submitter__c, status__c, createddate,record_name__c, amount__c, expense__c FROM salesforce.Custom_Approval__c WHERE Approval_Type__c = $1 AND Assign_To__c = $2 ',['Expense', objUser.sfid])
+    pool.query('SELECT sfid, Submitter__c, status__c, createddate,record_name__c, amount__c, expense__c FROM salesforce.Custom_Approval__c WHERE Approval_Type__c = $1 AND Assign_To__c = $2 ',['Expense', objUser.sfid])
     .then((customApprovalResult) => {
             console.log('customApprovalResult  : '+JSON.stringify(customApprovalResult.rows));
             if(customApprovalResult.rowCount > 0)
@@ -23,6 +23,8 @@ router.get('/expenseApprovalsList',verify, (request, response) => {
                 for(let i=0, len = customApprovalResult.rows.length ; i < len ; i++ )
                 {
                     let crDate = new Date(customApprovalResult.rows[i].createddate);
+                    crDate.setHours(crDate.getHours() +5 );
+                    crDate.setMinutes(crDate.getMinutes() + 30 );
                     let strDate = crDate.toLocaleString();
                     let obj = {};
                     obj.sequence = (i+1);
@@ -30,8 +32,9 @@ router.get('/expenseApprovalsList',verify, (request, response) => {
                     obj.currentStatus = customApprovalResult.rows[i].status__c;
                     obj.totalAmount = customApprovalResult.rows[i].amount__c;
                     obj.createdDate = strDate;
-                    obj.approveBtn = '<button class="btn btn-primary" id="approve'+customApprovalResult.rows[i].expense__c+'" >Approve</button>';
-                    obj.rejectBtn = '<button class="btn btn-danger" id="reject'+customApprovalResult.rows[i].expense__c+'" >Reject</button>';
+
+                    obj.approveBtn = '<button class="btn btn-primary approvalButton"  id="Approved-'+customApprovalResult.rows[i].expense__c+'@'+customApprovalResult.rows[i].sfid+'" >Approve</button>';
+                    obj.rejectBtn = '<button class="btn btn-danger approvalButton"  id="Rejected-'+customApprovalResult.rows[i].expense__c+'@'+customApprovalResult.rows[i].sfid+'" >Reject</button>';
                     lstApprovalRecords.push(obj);
                 }
                 response.send(lstApprovalRecords);
@@ -96,6 +99,7 @@ router.get('/pldFormsApprovalList', verify, (request, response) => {
 router.post('/pldApprovalFeedback',verify, (request,response) => {
 
     let objUser = request.user;
+    console.log('Hello Approval  ');
     let body = request.body;
     let statusToSet = '';
     if(body.type == 'approve')
@@ -125,6 +129,64 @@ router.post('/pldApprovalFeedback',verify, (request,response) => {
         response.send('Error');
     })
  
+});
+
+
+router.post('/handleExpenseApproval', verify, async (request, response) =>{
+
+    let objUser = request.user;
+    console.log('objUser  : '+JSON.stringify(objUser));
+    let body = request.body;
+    console.log('objUser  : '+JSON.stringify(body));
+
+    if(objUser.isManager)
+    {
+        
+            let customApprovalUpdateQuery = 'UPDATE salesforce.Custom_Approval__c SET '+
+                                            'status__c = \''+body.type+'\' '+
+                                            'WHERE sfid = $1';
+            
+            console.log('customApprovalUpdateQuery  : '+customApprovalUpdateQuery);
+            await
+            pool.query(customApprovalUpdateQuery,[body.customApprovalId])
+            .then((customApprovalResult) => {
+                console.log('customApprovalResult  : '+JSON.stringify(customApprovalResult.rows));
+            })
+            .catch((customApprovalError) => {
+                    console.log('customApprovalError  '+customApprovalError);
+            })
+
+
+            let expenseUpdateQuery = 'UPDATE salesforce.Milestone1_Expense__c SET '+ 
+                                    'isHerokuEditButtonDisabled__c = false , '+
+                                    'isHerokuApprovalButtonDisabled__c = false ,'+
+                                    'isHerokuFeedbackButtonDisabled__c = true ,'+ 
+                                    'approval_status__c = \''+body.type+'\' '+
+                                    'WHERE sfid = $1';
+            
+            console.log('expenseUpdateQuery  : '+expenseUpdateQuery);
+
+            await
+            pool.query(expenseUpdateQuery,[body.expenseId])
+            .then((expenseUpdateResult) => {
+                console.log('expenseUpdateResult  : '+JSON.stringify(expenseUpdateResult.rows));
+            
+                    if(body.type == 'Approved')
+                    {
+                        response.send('Approved !');
+                    }
+                    else if(body.type == 'Rejected')
+                    {
+                        response.send('Rejected !');
+                    }
+
+            })
+            .catch((expenseErrorResult) => {
+                console.log('expenseErrorResult  '+expenseErrorResult);
+            })
+
+    }
+
 });
 
 

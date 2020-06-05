@@ -8,7 +8,7 @@
 
 
 
-<center><h3>Conveyance Vocher ListView</h3></center>
+<center><h3>Conveyance Voucher List View</h3></center>
 
 <p id="expenseId"><%= expenseId %></p>
 <div class="container">
@@ -80,7 +80,8 @@
         let columns ={
             sequence : 'Sequence',
             name: 'Conveyance Voucher ',
-            TravellingPurpose : 'Purpose of Travelling',
+            travellingPurpose : 'Purpose of Travelling',
+            amount : 'Amount',
             modeOfTravel : 'Nature Of Travel',
             createDdate : 'Created Date',
 
@@ -190,12 +191,38 @@
                                 htmlTable += '<td><strong>Mode of Conveyance</strong></td>';
                                 htmlTable += '<td>'+conveyanceRecord.mode_of_conveyance__c+'</td>';
                               htmlTable += '</tr>';
+                              
+                              htmlTable += '<tr>';
+                              htmlTable += '<td><strong>Acitivity Code</strong></td>';
+                              if(conveyanceRecord.activity_code__c != null)
+                                  htmlTable += '<td>'+conveyanceRecord.activity_code__c+'</td>';
+                              else
+                                  htmlTable += '<td></td>';
+
+                              htmlTable += '<td><strong>Project Task</strong></td>';
+                              if(conveyanceRecord.project_tasks__c != null)
+                                  htmlTable += '<td>'+conveyanceRecord.project_tasks__c+'</td>';
+                              else
+                                  htmlTable += '<td></td>';
+                              htmlTable += '</tr>';
+
                               htmlTable += '<tr>';
                                 htmlTable += '<td><strong>Purpose of Travel</strong></td>';
                                 htmlTable += '<td>'+conveyanceRecord.purpose_of_travel__c+'</td>';
                                 htmlTable += '<td><strong>Create Date</strong></td>';
                                 htmlTable += '<td>'+strCreatedDate+'</td>';
                               htmlTable += '</tr>';
+
+                              htmlTable += '<tr>';    
+                              htmlTable += '<td><strong>View Image</strong></td>';
+                              if(conveyanceRecord.heroku_image_url__c != null && conveyanceRecord.heroku_image_url__c != '' && conveyanceRecord.heroku_image_url__c != 'demo')
+                                  htmlTable += '<td><a target="_blank" href="'+conveyanceRecord.heroku_image_url__c+'" >Click Here</a></td>';
+                              else
+                                  htmlTable += '<td></td>';
+                              htmlTable += '<td><strong>Kms Travelled</strong></td>';
+                              htmlTable += '<td>'+conveyanceRecord.kms_travelled__c+'</td>';
+                              htmlTable += '</tr>';
+
                               $('#conveyanceVouchertable').empty();
                               $('#conveyanceVouchertable').html(htmlTable);
         

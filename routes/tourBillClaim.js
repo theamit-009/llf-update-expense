@@ -46,6 +46,8 @@ router.get('/gettourbillclaim',verify,(request,response)=>{
         tourBillClaimResult.rows.forEach((eachRecord) => {
           let obj = {};
           let createdDate = new Date(eachRecord.createddate);
+          createdDate.setHours(createdDate.getHours() + 5);
+          createdDate.setMinutes(createdDate.getMinutes() + 30);
           let strDate = createdDate.toLocaleString();
           obj.sequence = i;
           obj.name = '<a href="'+eachRecord.sfid+'"  data-toggle="modal" data-target="#popup" class="tourBillId"  id="" >'+eachRecord.name+'</a>';
@@ -397,7 +399,7 @@ router.post('/airRailBusCharges',verify, (request, response) => {
                  let airRailBusSingleRecordValues = [];
                  airRailBusSingleRecordValues.push(bodyResult.arrival_Date[i]);
                  airRailBusSingleRecordValues.push(bodyResult.departure_Date[i]);
-                 airRailBusSingleRecordValues.push(bodyResult.activity_code[i]);
+                 airRailBusSingleRecordValues.push(bodyResult.projectTask[i]);
                  airRailBusSingleRecordValues.push(bodyResult.arrival_Station[i]);
                  airRailBusSingleRecordValues.push(bodyResult.departure_Station[i]);
                  airRailBusSingleRecordValues.push(bodyResult.amount[i]);
@@ -435,7 +437,7 @@ router.post('/airRailBusCharges',verify, (request, response) => {
             parentTourBillClaimId = bodyResult.parentTourBillId;
             airRailBusSingleRecordValues.push(bodyResult.arrival_Date);
             airRailBusSingleRecordValues.push(bodyResult.departure_Date);
-            airRailBusSingleRecordValues.push(bodyResult.activity_code);
+            airRailBusSingleRecordValues.push(bodyResult.projectTask);
             airRailBusSingleRecordValues.push(bodyResult.arrival_Station);
             airRailBusSingleRecordValues.push(bodyResult.departure_Station);
             airRailBusSingleRecordValues.push(bodyResult.amount);
@@ -448,7 +450,7 @@ router.post('/airRailBusCharges',verify, (request, response) => {
           }
       }
       console.log('lstAirRailBus Final Result  '+JSON.stringify(lstAirRailBus));
-      let airRailBusInsertQuery = format('INSERT INTO salesforce.Air_Rail_Bus_Fare__c (Arrival_Date__c, Departure_Date__c,Activity_Code__c,Arrival_Station__c,Departure_Station__c,Amount__c,heroku_image_url__c,Tour_Bill_Claim__c) VALUES %L returning id', lstAirRailBus);
+      let airRailBusInsertQuery = format('INSERT INTO salesforce.Air_Rail_Bus_Fare__c (Arrival_Date__c, Departure_Date__c, project_task__c, Arrival_Station__c,Departure_Station__c,Amount__c,heroku_image_url__c,Tour_Bill_Claim__c) VALUES %L returning id', lstAirRailBus);
   
       pool.query(airRailBusInsertQuery)
       .then((airRailBusQueryResult) => {
@@ -523,7 +525,7 @@ if(result.error)
           place:joi.string().required().label('Enter your Place'), 
           projectTask:joi.string().required().label('Please select the ActivityCode'),
           amount:joi.number().required().label('Amount cannot be Null'),
-          imgpath:joi.string().valid('demo').label('Upload your File/Attachments').required(),
+          imgpath:joi.string().invalid('demo').label('Upload your File/Attachments').required(),
         //  activity_code:joi.required,
             })
             let result= schema.validate({projectTask:bodyResult.projectTask[i],date:bodyResult.date[i],place:bodyResult.place[i],imgpath:bodyResult.imgpath[i],amount:bodyResult.amount[i]});
@@ -539,8 +541,8 @@ if(result.error)
               console.log('index : '+i+'  bodyResult.date[i]  '+bodyResult.date[i]);
               singleConveyanceRecord.push(bodyResult.place[i]);
               console.log('index : '+i+'  bodyResult.place[i]  '+bodyResult.place[i]);
-              singleConveyanceRecord.push(bodyResult.activity_code[i]);
-              console.log('index : '+i+'  bodyResult.activity_code[i] '+bodyResult.activity_code[i]);
+              singleConveyanceRecord.push(bodyResult.projectTask[i]);
+              console.log('index : '+i+'  bodyResult.activity_code[i] '+bodyResult.projectTask[i]);
               singleConveyanceRecord.push(bodyResult.remarks[i]);
               console.log('index : '+i+'  bodyResult.remarks[i]  '+bodyResult.remarks[i]);
               singleConveyanceRecord.push(bodyResult.amount[i]);
@@ -565,7 +567,7 @@ if(result.error)
           place:joi.string().required().label('Enter your Place'), 
           projectTask:joi.string().required().label('Select The Activity Code'),
             amount:joi.number().required().label('Amount cannot be Null'),
-            imgpath:joi.string().valid('demo').label('Upload your File/Attachments').required(),
+            imgpath:joi.string().invalid('demo').label('Upload your File/Attachments').required(),
         //  activity_code:joi.required,
       })
           
@@ -579,7 +581,7 @@ if(result.error)
         let singleConveyanceRecord = [];
               singleConveyanceRecord.push(bodyResult.date);
               singleConveyanceRecord.push(bodyResult.place);
-              singleConveyanceRecord.push(bodyResult.activity_code);
+              singleConveyanceRecord.push(bodyResult.projectTask);
               singleConveyanceRecord.push(bodyResult.remarks);
               singleConveyanceRecord.push(bodyResult.amount);
               singleConveyanceRecord.push(bodyResult.imgpath);
@@ -590,7 +592,7 @@ if(result.error)
       console.log('lstConveyanceCharges  : '+JSON.stringify(lstConveyanceCharges));
   }
       
-  let conveyanceChargesInsertQuery = format('INSERT INTO salesforce.Conveyance_Charges__c  (Date__c, Place__c, Activity_Code__c,Remarks__c,Amount__c,Heroku_Image_URL__c,Tour_Bill_Claim__c) VALUES %L returning id',lstConveyanceCharges);
+  let conveyanceChargesInsertQuery = format('INSERT INTO salesforce.Conveyance_Charges__c  (Date__c, Place__c, project_task__c,Remarks__c,Amount__c,Heroku_Image_URL__c,Tour_Bill_Claim__c) VALUES %L returning id',lstConveyanceCharges);
   pool.query(conveyanceChargesInsertQuery)
   .then((conveyanceChargesQueryResult) => {
       console.log('conveyanceChargesQueryResult  '+conveyanceChargesQueryResult.rows);
@@ -634,7 +636,7 @@ if(result.error)
           let strDate = createdDate.toLocaleString();
   
           let strDate2 = new Date(eachRecord.date__c);
-          let strDate3 = strDate2.toLocaleString();
+          let strDate3 = strDate2.toISOString().split('T')[0];
           obj.sequence = i;
           obj.place=eachRecord.place__c;
           obj.name = '<a href="#" class="conveyanceViewTag" id="'+eachRecord.sfid+'" >'+eachRecord.name+'</a>';
@@ -662,7 +664,7 @@ if(result.error)
   
     let tourbillId = request.query.tourbillId;
     console.log('tourbillId  : '+tourbillId);
-    let queryText = 'SELECT conveyancename.sfid, conveyancename.place__c, conveyancename.amount__c,conveyancename.date__c, conveyancename.name as conveyname ,tourBill.sfid  as tourId ,tourBill.name as tourbillname,conveyancename.createddate '+
+    let queryText = 'SELECT conveyancename.sfid, conveyancename.activity_code__c, conveyancename.project_tasks__c, conveyancename.remarks__c , conveyancename.heroku_image_url__c,  conveyancename.place__c, conveyancename.amount__c,conveyancename.date__c, conveyancename.name as conveyname ,tourBill.sfid  as tourId ,tourBill.name as tourbillname,conveyancename.createddate '+
                      'FROM salesforce.Conveyance_Charges__c conveyancename '+ 
                      'INNER JOIN salesforce.Tour_Bill_Claim__c tourBill '+
                      'ON conveyancename.Tour_Bill_Claim__c =  tourBill.sfid '+
@@ -756,21 +758,27 @@ router.get('/boardingLodgingCharges/:parentTourBillId', verify, (request, respon
 
 router.post('/boardingLodgingCharges',verify, (request, response) => {
   let objUser = request.user;
-  console.log('body Boarding Charges '+JSON.stringify(request.body))
+  console.log('body Boarding Charges '+JSON.stringify(request.body));
+
   console.log('typeof(request.body.date)   : '+typeof(request.body.stayOption));
-  const {stayOption,projectTask,placeJourney,fromDate ,fromTime,toDate,toTime,amtForBL,actualAMTForBL,ownStayAmount,activity_code,imgpath ,parentTourBillId} =request.body;
+  const {stayOption,projectTask,placeJourney,tier3City,fromDate ,fromTime,toDate,toTime,totalAllowances,dailyAllowances, amtForBL,actualAMTForBL,policyamtForBL, ownStayAmount,activity_code,imgpath ,parentTourBillId} =request.body;
   console.log('ulploadFile '+imgpath);
   console.log('From stayOption '+stayOption );
   console.log('projectTask '+projectTask );
   console.log(' placeJourney '+placeJourney );
+  console.log(' tier3City '+tier3City );
   console.log('From time '+fromTime );
   console.log('toDate  '+toDate );
   console.log('toTime time '+toTime );
   console.log('fromDate '+fromDate );
+  console.log('totalAllowances  '+totalAllowances);
+  console.log('dailyAllowances  '+dailyAllowances);
   console.log(' amtForBL '+amtForBL );
+  console.log(' actualAMTForBL '+actualAMTForBL );
+  console.log('policyamtForBL  '+policyamtForBL);
   console.log(' ownStayAmount '+ownStayAmount );
   console.log(' activity_code '+activity_code );
-  console.log(' actualAMTForBL '+actualAMTForBL );
+  
   
       let numberOfRows ;  var lstBoarding = [] , parentTourBillTemp ='';
       if(typeof(request.body.stayOption) == 'object')
@@ -779,15 +787,38 @@ router.post('/boardingLodgingCharges',verify, (request, response) => {
           console.log('numberOfRows  '+numberOfRows); 
           for(let i=0; i < numberOfRows ;i++)
         { 
-          const schema =joi.object({
-            stayOption:joi.string().required().label('Please Choose Stay Mode'),
-          // projectTask:joi.string().required().label('Activity code is reqired '),
-           toDate:joi.date().max('now').required().label('Please Select date BeFore Today Date'),
-           fromDate:joi.date().required().less(joi.ref('toDate')).label('selcet date less than  ToDate '),
-           actualAMTForBL:joi.number().required().label('Enter Your Actual Boarding lodging Amount'),
-           imgpath:joi.string().invalid('demo').label('Upload your File/Attachments').required(),
-          })
-          let result=schema.validate({stayOption:stayOption[i],toDate:toDate[i],fromDate:fromDate[i],actualAMTForBL:actualAMTForBL[i],imgpath:imgpath[i]});
+          let schema,result ; 
+
+          if(stayOption[i] == 'Stay')
+          {
+             schema =joi.object({
+              stayOption:joi.string().required().label('Please Choose Stay Mode'),
+             projectTask:joi.string().required().label('Please select activity code.'),
+             placeJourney: joi.string().required().label('Please select place of journey.'),
+             toDate:joi.date().max('now').required().label('Please Select date BeFore Today Date'),
+             fromDate:joi.date().required().less(joi.ref('toDate')).label('selcet date less than  ToDate '),
+             actualAMTForBL:joi.number().required().label('Enter Your Actual Boarding lodging Amount'),
+             imgpath:joi.string().invalid('demo').label('Upload your File/Attachments').required(),
+            })
+
+            result=schema.validate({stayOption:stayOption[i],projectTask:projectTask[i],placeJourney:placeJourney[i], toDate:toDate[i],fromDate:fromDate[i],actualAMTForBL:actualAMTForBL[i],imgpath:imgpath[i]});
+          }
+          else if(stayOption[i] == 'Own Stay')
+          {
+
+             schema =joi.object({
+              stayOption:joi.string().required().label('Please Choose Stay Mode'),
+             projectTask:joi.string().required().label('Please select activity code.'),
+             placeJourney: joi.string().required().label('Please select place of journey.'),
+             toDate:joi.date().max('now').required().label('Please Select date BeFore Today Date'),
+             fromDate:joi.date().required().less(joi.ref('toDate')).label('selcet date less than  ToDate '),
+             imgpath:joi.string().invalid('demo').label('Upload your File/Attachments').required(),
+            })
+
+            result=schema.validate({stayOption:stayOption[i],projectTask:projectTask[i],placeJourney:placeJourney[i], toDate:toDate[i],fromDate:fromDate[i],imgpath:imgpath[i]});
+          }
+         
+        //  result=schema.validate({stayOption:stayOption[i],projectTask:projectTask[i],placeJourney:placeJourney[i], toDate:toDate[i],fromDate:fromDate[i],actualAMTForBL:actualAMTForBL[i],imgpath:imgpath[i]});
           console.log('Validations'+JSON.stringify(result));
           if(result.error)
           {
@@ -800,23 +831,32 @@ router.post('/boardingLodgingCharges',verify, (request, response) => {
               lstcharges.push(stayOption[i]);
               console.log('.....1 =>'+ lstcharges);
               lstcharges.push(placeJourney[i]);
+              lstcharges.push(tier3City[i]);
               lstcharges.push(projectTask[i]);
               console.log('.....2 =>'+ lstcharges);
-           //   lstcharges.push(days[i]); 
-              lstcharges.push(fromDate[i]);      
-              lstcharges.push(toDate[i]);
-              lstcharges.push(actualAMTForBL[i]);
-              console.log('.....3 =>'+ lstcharges);
+            
+              let fromDateTime = fromDate[i]+'T'+fromTime[i]+':00';
+              lstcharges.push(fromDateTime[i]);      
+              let toDateTime = toDate[i]+'T'+toTime[i]+':00';
+              lstcharges.push(toDateTime[i]);
+
+              lstcharges.push(totalAllowances[i]);      
+              lstcharges.push(dailyAllowances[i]);
+
               lstcharges.push(amtForBL[i]);
+              lstcharges.push(actualAMTForBL[i]);
+              lstcharges.push(policyamtForBL[i]);
+              
               lstcharges.push(ownStayAmount[i]);
+
               console.log('.....4 =>'+ lstcharges);
               if(typeof(imgpath[i] != 'undefined'))
               lstcharges.push(imgpath[i]);
               else
               lstcharges.push('');
               lstcharges.push(parentTourBillId[i]);
-              console.log('.....4 =>'+ lstcharges);
-             // lstBoarding.push(lstcharges);
+             
+           
              console.log('.. '+lstcharges);
 
              parentTourBillTemp = parentTourBillId[i];
@@ -825,15 +865,38 @@ router.post('/boardingLodgingCharges',verify, (request, response) => {
         }console.log(' jsdkjasdkjad'+lstBoarding);
       }
       else{
-        const schema=joi.object({
-          stayOption:joi.string().required().label('Please Choose Stay Mode'),
-         // projectTask:joi.string().required().label('Activity code is reqired '),
-          toDate:joi.date().max('now').required().label('Please Select date BeFore Today Date'),
-          fromDate:joi.date().required().less(joi.ref('toDate')).label('selcet date less than  ToDate '),
-          actualAMTForBL:joi.number().required().label('Enter Your Actual Boarding lodging Amount'),
+
+        let schema, result;
+        if(stayOption == 'Stay')
+        {
+            schema=joi.object({
+            stayOption:joi.string().required().label('Please Choose Stay Mode'),
+            projectTask:joi.string().required().label('Please select activity code.'),
+            placeJourney: joi.string().required().label('Please select place of journey.'),
+            toDate:joi.date().max('now').required().label('Please Select date BeFore Today Date'),
+            fromDate:joi.date().required().less(joi.ref('toDate')).label('selcet date less than  ToDate '),
+            actualAMTForBL:joi.number().required().label('Enter Your Actual Boarding lodging Amount'),
+            
+          })
+           result=schema.validate({stayOption,projectTask,placeJourney, toDate,fromDate,actualAMTForBL});
+
+        }
+        else if(stayOption == 'Own Stay')
+        {
+           schema=joi.object({
+            stayOption:joi.string().required().label('Please Choose Stay Mode'),
+            projectTask:joi.string().required().label('Please select activity code.'),
+            placeJourney: joi.string().required().label('Please select place of journey.'),
+            toDate:joi.date().max('now').required().label('Please Select date BeFore Today Date'),
+            fromDate:joi.date().required().less(joi.ref('toDate')).label('selcet date less than  ToDate '),
           
-        })
-        let result=schema.validate({stayOption,toDate,fromDate,actualAMTForBL});
+            
+          })
+           result=schema.validate({stayOption,projectTask,placeJourney, toDate,fromDate});
+
+        }
+        
+       // let result=schema.validate({stayOption,projectTask,placeJourney, toDate,fromDate,actualAMTForBL});
         console.log('Validations'+JSON.stringify(result));
         if(result.error)
         {
@@ -845,14 +908,25 @@ router.post('/boardingLodgingCharges',verify, (request, response) => {
         //   lstcharges.empty();
                   lstcharges.push(stayOption);
                   lstcharges.push(placeJourney);
-         // lstcharges.push(activity_code);
+                  lstcharges.push(tier3City);
                   lstcharges.push(projectTask);
-                //  lstcharges.push(days); 
-                  lstcharges.push(fromDate);      
-                  lstcharges.push(toDate);
-                  lstcharges.push(actualAMTForBL);
+                
+                  let fromDateTime = fromDate+'T'+fromTime+':00';
+                  console.log('fromDateTime  : '+fromDateTime);
+                  lstcharges.push(fromDateTime);      
+                  let toDateTime = toDate+'T'+toTime+':00';
+                  console.log('toDateTime  : '+toDateTime);
+                  lstcharges.push(toDateTime);
+
+                  lstcharges.push(totalAllowances);
+                  lstcharges.push(dailyAllowances);
+
                   lstcharges.push(amtForBL);
+                  lstcharges.push(actualAMTForBL);
+                  lstcharges.push(policyamtForBL);
+
                   lstcharges.push(ownStayAmount);
+
                   lstcharges.push(imgpath);
                   lstcharges.push(parentTourBillId);
           console.log(JSON.stringify(lstcharges));
@@ -862,7 +936,7 @@ router.post('/boardingLodgingCharges',verify, (request, response) => {
 }
      console.log('lstBoarding' +lstBoarding);
 
-      let lodgingboarding = format('INSERT INTO salesforce.Boarding_Lodging__c (Stay_Option__c, Place_Journey__c, 	project_task__c,From__c,To__c,Actual_Amount_for_boarding_and_lodging__c	,	Amount_for_boarding_and_lodging__c,Own_Stay_Amount__c,Heroku_Image_URL__c,Tour_Bill_Claim__c) VALUES %L returning id',lstBoarding);
+      let lodgingboarding = format('INSERT INTO salesforce.Boarding_Lodging__c (Stay_Option__c, Place_Journey__c,Correspondence_City__c,project_task__c, From__c, To__c,Total_Allowance__c,Daily_Allowance__c,Amount_for_boarding_and_lodging__c, Actual_Amount_for_boarding_and_lodging__c	,Amount_of_B_L_as_per_policy__c	,Own_Stay_Amount__c,Heroku_Image_URL__c,Tour_Bill_Claim__c) VALUES %L returning id',lstBoarding);
       console.log('qyyy '+lodgingboarding);
       pool
       .query(lodgingboarding)
@@ -907,12 +981,14 @@ router.get('/boardingLodgingListView',verify,(request,response)=>{
             BoardingQueryResult.rows.forEach((eachRecord) => {
           let obj = {};
           let createdDate = new Date(eachRecord.createddate);
+          createdDate.setHours(createdDate.getHours() + 5);
+          createdDate.setMinutes(createdDate.getMinutes() + 30);
           let strDate = createdDate.toLocaleString();
   
           let strFrom = new Date(eachRecord.from__c);
-          let strDateFrom = strFrom.toLocaleString();
+          let strDateFrom = strFrom.toISOString().split('T')[0];
           let strto = new Date(eachRecord.to__c);
-          let strDateTo = strto.toLocaleString();
+          let strDateTo = strto.toISOString().split('T')[0];
           obj.sequence = i;
           obj.place=eachRecord.place_journey__c;
           obj.name = '<a href="#" class="boardingTag" id="'+eachRecord.sfid+'" >'+eachRecord.name+'</a>';
@@ -940,11 +1016,11 @@ router.get('/boardingLodgingListView',verify,(request,response)=>{
   router.get('/getBoardingDetail',verify,(request,response)=>{
     let tourbillId = request.query.tourbillId;
     console.log('tourbillId  : '+tourbillId);
-    let queryText = 'SELECT boradLoad.sfid,boradLoad.No_of_Days__c,boradLoad.Stay_Option__c,boradLoad.Place_Journey__c, boradLoad.total_amount__c, boradLoad.name as boardingname ,tourBill.sfid  as tourId ,tourBill.name as tourbillname,boradLoad.createddate '+
+    let queryText = 'SELECT boradLoad.correspondence_city__c,boradLoad.total_allowance__c, boradLoad.activity_code__c,boradLoad.own_stay_amount__c,boradLoad.project_tasks__c,boradLoad.from__c,boradLoad.to__c,boradLoad.amount_of_b_l_as_per_policy__c,boradLoad.amount_for_boarding_and_lodging__c,boradLoad.heroku_image_url__c, boradLoad.extra_amount__c,boradLoad.total_amount__c, boradLoad.actual_amount_for_boarding_and_lodging__c,boradLoad.daily_allowance__c, boradLoad.sfid,boradLoad.No_of_Days__c,boradLoad.Stay_Option__c,boradLoad.Place_Journey__c, boradLoad.total_amount__c, boradLoad.name as boardingname ,tourBill.sfid  as tourId ,tourBill.name as tourbillname,boradLoad.createddate '+
                      'FROM salesforce.Boarding_Lodging__c boradLoad '+ 
                      'INNER JOIN salesforce.Tour_Bill_Claim__c tourBill '+
                      'ON boradLoad.Tour_Bill_Claim__c =  tourBill.sfid '+
-                     'WHERE  boradLoad.sfid= $1 ';
+                     'WHERE  boradLoad.sfid  = $1 ';
   
     pool
     .query(queryText,[tourbillId])
@@ -1075,7 +1151,7 @@ router.post('/telephoneFood',verify, (request, response) => {
                        let singleTelephoneFoodRecord = [];
                         singleTelephoneFoodRecord.push(request.body.foodingExpenses);
                         singleTelephoneFoodRecord.push(request.body.laundryExpenses);
-                        singleTelephoneFoodRecord.push(request.body.activity_code);
+                        singleTelephoneFoodRecord.push(request.body.projectTask);
                         singleTelephoneFoodRecord.push(request.body.remarks);
                         singleTelephoneFoodRecord.push(request.body.imgpath);
                         singleTelephoneFoodRecord.push(request.body.parentTourBillId);
@@ -1104,7 +1180,7 @@ router.post('/telephoneFood',verify, (request, response) => {
                           let singleTelephoneFoodRecord = [];
                           singleTelephoneFoodRecord.push(request.body.foodingExpenses[i]);
                           singleTelephoneFoodRecord.push(request.body.laundryExpenses[i]);
-                          singleTelephoneFoodRecord.push(request.body.activity_code[i]);
+                          singleTelephoneFoodRecord.push(request.body.projectTask[i]);
                           singleTelephoneFoodRecord.push(request.body.remarks[i]);
                           singleTelephoneFoodRecord.push(request.body.imgpath[i]);
                           singleTelephoneFoodRecord.push(request.body.parentTourBillId[i]);
@@ -1113,7 +1189,7 @@ router.post('/telephoneFood',verify, (request, response) => {
              }
          }
         console.log('lstTelephoneFood  '+JSON.stringify(lstTelephoneFood));
-        let telephoneFoodInsertQuery = format('INSERT INTO salesforce.Telephone_Fooding_Laundry_Expenses__c (Fooding_Expense__c, Laundry_Expense__c, Activity_Code__c,Remarks__c,heroku_image_url__c, Tour_Bill_Claim__c) VALUES %L returning id',lstTelephoneFood);
+        let telephoneFoodInsertQuery = format('INSERT INTO salesforce.Telephone_Fooding_Laundry_Expenses__c (Fooding_Expense__c, Laundry_Expense__c, project_task__c ,Remarks__c,heroku_image_url__c, Tour_Bill_Claim__c) VALUES %L returning id',lstTelephoneFood);
     
         pool.query(telephoneFoodInsertQuery)
         .then((telephoneFoodInsertQueryResult) => {
@@ -1151,12 +1227,14 @@ router.get('/telephoneFoodCharge',verify,(request,response)=>{
             telephonegQueryResult.rows.forEach((eachRecord) => {
           let obj = {};
           let createdDate = new Date(eachRecord.createddate);
+          createdDate.setHours(createdDate.getHours() + 5);
+          createdDate.setMinutes(createdDate.getMinutes() + 30);
           let strDate = createdDate.toLocaleString();
           obj.sequence = i;
           obj.name = '<a href="#" class="telephoneChargeTag" id="'+eachRecord.sfid+'" >'+eachRecord.name+'</a>';
           obj.amount = eachRecord.total_amount__c;
-          obj.fooding=eachRecord.fooding_expense__c;
-          obj.laundry=eachRecord.laundry_expense__c;
+          obj.fooding = eachRecord.fooding_expense__c;
+          obj.laundry = eachRecord.laundry_expense__c;
           obj.createDdate = strDate;
           obj.editAction = '<button href="#" class="btn btn-primary editFooding" id="'+eachRecord.sfid+'" >Edit</button>'
              i= i+1;
@@ -1177,7 +1255,7 @@ router.get('/telephoneFoodCharge',verify,(request,response)=>{
   router.get('/gettelephoneFoodChargeDetail',verify,(request,response)=>{
     let tourbillId = request.query.tourbillId;
     console.log('tourbillId  : '+tourbillId);
-    let queryText = 'SELECT charge.sfid,charge.activity_code__c, charge.project_tasks__c, charge.remarks__c, charge.total_amount__c,charge.Fooding_Expense__c,charge.Laundry_Expense__c, '+
+    let queryText = 'SELECT charge.sfid,charge.activity_code__c, charge.heroku_image_url__c, charge.project_tasks__c, charge.remarks__c, charge.total_amount__c,charge.Fooding_Expense__c,charge.Laundry_Expense__c, '+
                      'charge.name as chargegname ,tourBill.sfid  as tourId ,tourBill.name as tourbillname,charge.createddate '+
                      'FROM salesforce.Telephone_Fooding_Laundry_Expenses__c charge '+ 
                      'INNER JOIN salesforce.Tour_Bill_Claim__c tourBill '+
@@ -1294,10 +1372,15 @@ router.get('/miscellaneousCharge',verify,(request,response)=>{
             let modifiedList = [],i =1; 
             miscellaneousQueryResult.rows.forEach((eachRecord) => {
           let obj = {};
-          let strDated = new Date(eachRecord.date__c);
-          let dated = strDated.toLocaleString();
+        //  let strDated = new Date(eachRecord.date__c);
+         console.log('eachRecord.date__c  : '+eachRecord.date__c);
+          let dated = eachRecord.date__c.toISOString().split('T')[0];
+
           let createdDate = new Date(eachRecord.createddate);
+          createdDate.setHours(createdDate.getHours() +5 );
+          createdDate.setMinutes(createdDate.getMinutes() + 30);
           let strDate = createdDate.toLocaleString();
+          
           obj.sequence = i;
           obj.name = '<a href="#" class="miscellaneousTag" id="'+eachRecord.sfid+'" >'+eachRecord.name+'</a>';
           obj.amount = eachRecord.amount__c;
@@ -1327,7 +1410,8 @@ router.get('/miscellaneousCharge',verify,(request,response)=>{
     
     let tourbillId = request.query.tourbillId;
     console.log('tourbillId  : '+tourbillId);
-    let queryText = 'SELECT misChar.sfid, misChar.Amount__c,misChar.date__c,misChar.Particulars_Mode__c, misChar.name as chargegname,tourBill.sfid  as tourId ,tourBill.name as tourbillname,misChar.createddate '+
+    let queryText = 'SELECT misChar.sfid,misChar.activity_code__c, misChar.project_tasks__c,misChar.remarks__c, misChar.Amount__c,misChar.date__c,misChar.Particulars_Mode__c, misChar.name as chargegname , '+
+                     'tourBill.sfid  as tourId ,tourBill.name as tourbillname,misChar.createddate '+
                      'FROM salesforce.Miscellaneous_Expenses__c misChar '+ 
                      'INNER JOIN salesforce.Tour_Bill_Claim__c tourBill '+
                      'ON misChar.Tour_Bill_Claim__c =  tourBill.sfid '+
@@ -1403,12 +1487,14 @@ router.get('/miscellaneousCharge',verify,(request,response)=>{
         {
 
           const schema =joi.object({
+            dateBlank:joi.date().required().label('Please select a date first'),
             date:joi.date().max('now').required().label('Date must be less than Today'),
             particulars_mode:joi.string().required().label('Please provide Mode'),
             projectTask:joi.string().label('Select YOur ActivityCode '),
-            amount:joi.number().required().label('Amount cannot be null'),
+            amount:joi.number().required().label('Amount cannot be blank'),
+            imgpath:joi.string().invalid('demo').label('Upload your File/Attachments').required()
         })
-        let result = schema.validate({projectTask:request.body.projectTask,date:request.body.date,amount:request.body.amount,particulars_mode:request.body.particulars_mode})
+        let result = schema.validate({imgpath:request.body.imgpath, dateBlank:request.body.date, projectTask:request.body.projectTask,date:request.body.date,amount:request.body.amount,particulars_mode:request.body.particulars_mode})
         console.log('validation '+JSON.stringify(result));
         if(result.error)
         {
@@ -1419,7 +1505,7 @@ router.get('/miscellaneousCharge',verify,(request,response)=>{
           let singleMicellaneousChargeRecord = [];
           singleMicellaneousChargeRecord.push(request.body.date);
           singleMicellaneousChargeRecord.push(request.body.particulars_mode);
-          singleMicellaneousChargeRecord.push(request.body.activity_code);
+          singleMicellaneousChargeRecord.push(request.body.projectTask);
           singleMicellaneousChargeRecord.push(request.body.remarks);
           singleMicellaneousChargeRecord.push(request.body.amount);
           singleMicellaneousChargeRecord.push(request.body.imgpath);
@@ -1434,35 +1520,39 @@ router.get('/miscellaneousCharge',verify,(request,response)=>{
             for(let i=0;i < numberOfRows ; i++)
             {
                const schema =joi.object({
-                date:joi.date().max('now').required().label('Date must be less than Today'),
-                  particulars_mode:joi.string().required().label('Mode should BE Define'),
-                  projectTask:joi.string().required().label('select ActivityCode'),
-                amount:joi.number().required().label('Amount cannot be null'),
-             })
-            let result = schema.validate({projectTask:request.body.projectTask[i],date:request.body.date[i],amount:request.body.amount[i],particulars_mode:request.body.particulars_mode[i]})
-            console.log('validation '+JSON.stringify(result));
-            if(result.error)
-            {
-                console.log('Error in VALidation')
-                response.send(result.error.details[0].context.label);
-            } 
-            else{
-              console.log('Success vAlidation');
-              let singleMicellaneousChargeRecord = [];
-              singleMicellaneousChargeRecord.push(request.body.date[i]);
-              singleMicellaneousChargeRecord.push(request.body.particulars_mode[i]);
-              singleMicellaneousChargeRecord.push(request.body.activity_code[i]);
-              singleMicellaneousChargeRecord.push(request.body.remarks[i]);
-              singleMicellaneousChargeRecord.push(request.body.amount[i]);
-              singleMicellaneousChargeRecord.push(request.body.imgpath[i]);
-              singleMicellaneousChargeRecord.push(request.body.parentTourBillId[i]);
-              lstMiscellaneousCharges.push(singleMicellaneousChargeRecord);
+                dateBlank:joi.date().required().label('Please select a date first'),
+                date:joi.date().max('now').label('Date must be less than Today'),
+                particulars_mode:joi.string().required().label('Mode should BE Define'),
+                projectTask:joi.string().required().label('select ActivityCode'),
+                amount:joi.number().required().label('Amount cannot be blank'),
+                imgpath:joi.string().invalid('demo').label('Upload your File/Attachments').required()
+                })
+                let result = schema.validate({imgpath:request.body.imgpath[i], dateBlank:request.body.date[i], projectTask:request.body.projectTask[i],date:request.body.date[i],amount:request.body.amount[i],particulars_mode:request.body.particulars_mode[i]})
+                console.log('validation '+JSON.stringify(result));
+                if(result.error)
+                {
+                    console.log('Error in VALidation')
+                    response.send(result.error.details[0].context.label);
+                } 
+                else{
+                  console.log('Success vAlidation');
+                  let singleMicellaneousChargeRecord = [];
+                  singleMicellaneousChargeRecord.push(request.body.date[i]);
+                  singleMicellaneousChargeRecord.push(request.body.particulars_mode[i]);
+                  singleMicellaneousChargeRecord.push(request.body.projectTask[i]);
+                  singleMicellaneousChargeRecord.push(request.body.remarks[i]);
+                  singleMicellaneousChargeRecord.push(request.body.amount[i]);
+                  singleMicellaneousChargeRecord.push(request.body.imgpath[i]);
+                  singleMicellaneousChargeRecord.push(request.body.parentTourBillId[i]);
+                  lstMiscellaneousCharges.push(singleMicellaneousChargeRecord);
 
-             }
+                }
             }  
+
+          }
             console.log('listMIscellaneous'+JSON.stringify(lstMiscellaneousCharges));
  
-        let miscellenousChargesInsertQuery = format('INSERT INTO salesforce.Miscellaneous_Expenses__c (Date__c,Particulars_Mode__c,Activity_Code__c,Remarks__c,Amount__c, Heroku_Image_URL__c, Tour_Bill_Claim__c) VALUES %L returning id', lstMiscellaneousCharges);
+        let miscellenousChargesInsertQuery = format('INSERT INTO salesforce.Miscellaneous_Expenses__c (Date__c,Particulars_Mode__c,project_task__c,Remarks__c,Amount__c, Heroku_Image_URL__c, Tour_Bill_Claim__c) VALUES %L returning id', lstMiscellaneousCharges);
         console.log('Querrrrrrrrrrrrrrrrrryyyyyyyyyyyyy'+miscellenousChargesInsertQuery);
         pool.query(miscellenousChargesInsertQuery)
         .then((miscellenousChargesInsertQueryResult) => {
@@ -1473,9 +1563,7 @@ router.get('/miscellaneousCharge',verify,(request,response)=>{
             console.log('miscellenousChargesInsertQueryError  '+miscellenousChargesInsertQueryError.stack);
             response.send('Error Occurred !');
         })
-        
-    }
-
+    
     
 });
  

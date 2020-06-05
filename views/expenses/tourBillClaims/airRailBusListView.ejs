@@ -299,8 +299,8 @@
                               createdDate.setMinutes(createdDate.getMinutes() + 30);
 
 
-                              let strDepartureDate = depDate.toLocaleString();
-                              let strArrivalDate = arriDate.toLocaleString();
+                              let strDepartureDate = airRailBusRecord.departure_date__c.split('T')[0];
+                              let strArrivalDate = airRailBusRecord.arrival_date__c.split('T')[0];
                               let strCreatedDate = createdDate.toLocaleString();
                               htmlTable += '<tr>';
                                   htmlTable += '<td><strong>Name</strong></td>';

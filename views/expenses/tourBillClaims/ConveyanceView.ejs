@@ -244,7 +244,7 @@
                           createdDate.setMinutes(createdDate.getMinutes() + 30);
                           let strCreatedDate = createdDate.toLocaleString();
 
-                          let strdate = new Date(conveyanceRecord.date__c).toLocaleString();
+                          let strdate = conveyanceRecord.date__c.split('T')[0];
                           let htmlTable = '';
                               htmlTable += '<tr>';
                                   htmlTable += '<td><strong>Name</strong></td>';
@@ -260,41 +260,43 @@
                               htmlTable += '</tr>';
                               htmlTable += '<tr>';
                                   htmlTable += '<td><strong>Date</strong></td>';
-                                  htmlTable += '<td>'+conveyanceRecord.date__c+'</td>';
+                                  htmlTable += '<td>'+strdate+'</td>';
                                   htmlTable += '<td><strong>Remarks</strong></td>';
                                   htmlTable += '<td>'+conveyanceRecord.remarks__c+'</td>';
                               htmlTable += '</tr>';
                               
                               htmlTable += '<tr>';
-                                htmlTable += '<td><strong>Purpose of Travel</strong></td>';
-                               htmlTable += '<td>'+strdate+'</td>';
+
+                                  htmlTable += '<td><strong>Project Task</strong></td>';
+                                  if(conveyanceRecord.project_tasks__c != null)
+                                  htmlTable += '<td>'+conveyanceRecord.project_tasks__c+'</td>';
+                                  else
+                                  htmlTable += '<td></td>';
+                               
                                htmlTable += '<td><strong>Activity Code</strong></td>';
                                if(conveyanceRecord.activity_code__c != null)
                                   htmlTable += '<td>'+conveyanceRecord.activity_code__c+'</td>';
                                   else
                                   htmlTable += '<td></td>';
                           htmlTable += '</tr>';
-                               htmlTable += '</tr>';
+
+                             
                               htmlTable += '<tr>';  
-                                  htmlTable += '<td><strong>Project Task</strong></td>';
-                                  if(conveyanceRecord.project_tasks__c != null)
-                                  htmlTable += '<td>'+conveyanceRecord.project_tasks__c+'</td>';
+
+                                  htmlTable += '<td><strong>View Image</strong></td>';
+                             
+                                  if(conveyanceRecord.heroku_image_url__c != null && conveyanceRecord.heroku_image_url__c != '')
+                                      htmlTable += '<td><a target="_blank" href="'+conveyanceRecord.heroku_image_url__c+'" >Click Here</a></td>';
                                   else
-                                  htmlTable += '<td></td>';
+                                      htmlTable += '<td></td>';
+                                 
                                   htmlTable += '<td><strong>Create Date</strong></td>';
                                 htmlTable += '<td>'+strCreatedDate+'</td>';
-                                  htmlTable += '</tr>';
-
-                                htmlTable += '<td><strong>View Image</strong></td>';
-                              console.log('typeof(conveyanceRecord.heroku_image_url__c) '+typeof(conveyanceRecord.heroku_image_url__c));
-                              if(conveyanceRecord.heroku_image_url__c != null && conveyanceRecord.heroku_image_url__c != '')
-                                  htmlTable += '<td><a target="_blank" href="'+conveyanceRecord.heroku_image_url__c+'" >Click Here</a></td>';
-                              else
-                                  htmlTable += '<td></td>';
-                              
-                                  htmlTable += '<td><strong></strong></td>';
-                                  htmlTable += '<td></td>';
                               htmlTable += '</tr>';
+
+                               
+                              
+                                  
 
                               $('#conveyTable').empty();
                               $('#conveyTable').html(htmlTable);

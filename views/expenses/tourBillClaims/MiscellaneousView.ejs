@@ -245,8 +245,9 @@
                         {
                           let ChargeRecord = response[0];
                           let htmlTable = '';
-                          let strDate = new Date(ChargeRecord.date__c).toLocaleString();
+                        //  let strDate = new Date(ChargeRecord.date__c).toLocaleString();
                           let strCreatedDate = new Date(ChargeRecord.createddate).toLocaleString();
+                          let strdate = ChargeRecord.date__c.split('T')[0];
                           htmlTable += '<tr>';
                               htmlTable += '<td><strong>Name</strong></td>';
                               htmlTable += '<td>'+ChargeRecord.chargegname+'</td>';
@@ -256,7 +257,7 @@
                            
                           htmlTable += '<tr>';
                             htmlTable += '<td><strong>Date </strong></td>';
-                          htmlTable += '<td>'+ChargeRecord.date__c+'</td>';
+                          htmlTable += '<td>'+strdate+'</td>';
                           htmlTable += '<td><strong>Amount </strong></td>';
                           htmlTable += '<td>'+ChargeRecord.amount__c+'</td>';
                           htmlTable += '</tr>';
@@ -264,45 +265,36 @@
                           htmlTable += '<tr>';
                           htmlTable += '<td><strong>Remarks</strong></td>';
                           htmlTable += '<td>'+ChargeRecord.remarks__c+'</td>';
-                          htmlTable += '<td><strong>Tour Bill Claim</strong></td>';
-                          htmlTable += '<td>'+ChargeRecord.tour_bill_claim__c+'</td>';
+                          htmlTable += '<td><strong>Partiular Mode</strong></td>';
+                          htmlTable += '<td>'+ChargeRecord.particulars_mode__c+'</td>';
                           htmlTable += '</tr>';
 
 
                           htmlTable += '<tr>';  
-                            htmlTable += '<td><strong>Activity Code</strong></td>';
-                               if(ChargeRecord.activity_code__c != null)
-                                  htmlTable += '<td>'+ChargeRecord.activity_code__c+'</td>';
-                                  else
-                                  htmlTable += '<td></td>';
-                            
-                                  htmlTable += '<td><strong>Project Task</strong></td>';
-                                  if(ChargeRecord.project_tasks__c != null)
-                                  htmlTable += '<td>'+ChargeRecord.project_tasks__c+'</td>';
-                                  else
-                                  htmlTable += '<td></td>';
-                              htmlTable += '</tr>';
-
-
-                          htmlTable += '<tr>';
-                            htmlTable += '<td><strong>Date</strong></td>';
-                              htmlTable += '<td>'+strDate+'</td>';
-                              htmlTable += '<td><strong>Created Date</strong></td>';
-                              htmlTable += '<td>'+strCreatedDate+'</td>';
+                          htmlTable += '<td><strong>Activity Code</strong></td>';
+                          if(ChargeRecord.activity_code__c != null)
+                            htmlTable += '<td>'+ChargeRecord.activity_code__c+'</td>';
+                          else
+                            htmlTable += '<td></td>';
+                          
+                          htmlTable += '<td><strong>Project Task</strong></td>';
+                          if(ChargeRecord.project_tasks__c != null)
+                            htmlTable += '<td>'+ChargeRecord.project_tasks__c+'</td>';
+                          else
+                            htmlTable += '<td></td>';
                           htmlTable += '</tr>';
 
+
                           htmlTable += '<tr>';
-                                  
-                                  htmlTable += '<td><strong>View Image</strong></td>';
-                                  if(ChargeRecord.heroku_image_url__c != null && ChargeRecord.heroku_image_url__c != '')
-                                      htmlTable += '<td><a target="_blank" href="'+ChargeRecord.heroku_image_url__c+'" >Click Here</a></td>';
-                                  else
-                                      htmlTable += '<td></td>';
-                                  
-                                      htmlTable += '<td><strong>Partiular Mode</strong></td>';
-                                      htmlTable += '<td>'+ChargeRecord.particulars_mode__c+'</td>';
-                                  htmlTable += '</tr>';
-    
+                          htmlTable += '<td><strong>Created Date</strong></td>';
+                          htmlTable += '<td>'+strCreatedDate+'</td>';
+                          htmlTable += '<td><strong>View Image</strong></td>';
+                          if(ChargeRecord.heroku_image_url__c != null && ChargeRecord.heroku_image_url__c != '')
+                              htmlTable += '<td><a target="_blank" href="'+ChargeRecord.heroku_image_url__c+'" >Click Here</a></td>';
+                          else
+                              htmlTable += '<td></td>';
+
+                          htmlTable += '</tr>';
 
 
                           $('#miscellaneousChargeTable').empty();
@@ -363,8 +355,6 @@
                           let miscellaneousRecord = response[0];
                           let strdeparture = formatDate(new Date(miscellaneousRecord.date__c));
                           document.forms["editMiscellanousForm"]["miscellanouseName"].value = miscellaneousRecord.chargegname;
-                      //    document.forms["editMiscellanousForm"]["tourName"].value = miscellaneousRecord.tourid;
-                        // document.forms["editMiscellanousForm"]["tourName"].appendappendChild(option1);
                           document.forms["editMiscellanousForm"]["particularMode"].value = miscellaneousRecord.particulars_mode__c;
                           document.forms["editMiscellanousForm"]["amount"].value = miscellaneousRecord.amount__c;
                           document.forms["editMiscellanousForm"]["dt"].value = strdeparture;

@@ -56,7 +56,7 @@
       
               <div id="detailLoadingSpinner">
                 <center> <img src="/spinner-gif-transparent-background-14.gif" />  </center>
-            </div>
+              </div>
             <table id="pettyCashDetailsTable" class="table">
 
             </table>
@@ -191,8 +191,11 @@
                               let createdDate = new Date(pettyCashRecord.createddate);
                               createdDate.setHours(createdDate.getHours() + 5);
                               createdDate.setMinutes( createdDate.getMinutes() + 30 ); */
-                              let strBillDate = new Date(pettyCashRecord.bill_date__c).toLocaleString();
-                              let strCreatedDate = new Date(pettyCashRecord.createddate).toLocaleString();
+                              let strBillDate = pettyCashRecord.bill_date__c.split('T')[0];
+                              let createdDate = new Date(pettyCashRecord.createddate);
+                              createdDate.setHours(createdDate.getHours() + 5);
+                              createdDate.setMinutes(createdDate.getMinutes() + 30);
+                              let strCreatedDate = createdDate.toLocaleString();
                               htmlTable += '<tr>';
                                   htmlTable += '<td><strong>Name</strong></td>';
                                   htmlTable += '<td>'+pettyCashRecord.pettycashname+'</td>';

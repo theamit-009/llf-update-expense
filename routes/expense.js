@@ -167,7 +167,7 @@ router.get('/expenseAllRecords',verify, async (request, response) => {
   console.log('objUser   : '+JSON.stringify(objUser));
 
   pool
-  .query('SELECT exp.id, exp.sfid, exp.Name , exp.isHerokuEditButtonDisabled__c, exp.Project_Name__c, exp.Approval_Status__c, exp.Amount_Claimed__c, exp.petty_cash_amount__c, exp.Conveyance_Amount__c, exp.createddate, pro.sfid as prosfid, pro.name as proname FROM salesforce.Milestone1_Expense__c as exp JOIN salesforce.Milestone1_Project__c as pro ON exp.Project_name__c = pro.sfid WHERE exp.Incurred_By_Heroku_User__c = $1 AND exp.sfid != \'\'',['0030p000009y3OzAAI'])
+  .query('SELECT exp.id, exp.sfid, exp.Name , exp.isHerokuEditButtonDisabled__c,exp.isHerokuApprovalButtonDisabled__c,exp.isHerokuFeedbackButtonDisabled__c, exp.Project_Name__c, exp.Approval_Status__c, exp.Amount_Claimed__c, exp.petty_cash_amount__c, exp.Conveyance_Amount__c, exp.createddate, pro.sfid as prosfid, pro.name as proname FROM salesforce.Milestone1_Expense__c as exp JOIN salesforce.Milestone1_Project__c as pro ON exp.Project_name__c = pro.sfid WHERE exp.Incurred_By_Heroku_User__c = $1 AND exp.sfid != \'\'',[objUser.sfid])
   .then((expenseQueryResult) => {
       console.log('expenseQueryResult   : '+JSON.stringify(expenseQueryResult.rows));
           if(expenseQueryResult.rowCount > 0)
@@ -185,9 +185,10 @@ router.get('/expenseAllRecords',verify, async (request, response) => {
               for(let i=0 ; i < expenseQueryResult.rows.length; i++)
               {
                 let obj = {};
+
                 let crDate = new Date(expenseQueryResult.rows[i].createddate);
-               // crDate = crDate.setHours(crDate.getHours() + 5);
-               // crDate = crDate.setMinutes(crDate.getMinutes() + 30);
+                crDate.setHours(crDate.getHours() + 5);
+                crDate.setMinutes(crDate.getMinutes() + 30);
                 let strDate = crDate.toLocaleString();
                 obj.sequence = i+1;
                 obj.name = '<a href="'+expenseQueryResult.rows[i].sfid+'" data-toggle="modal" data-target="#popup" class="expId" id="name'+expenseQueryResult.rows[i].sfid+'"  >'+expenseQueryResult.rows[i].name+'</a>';
@@ -198,10 +199,15 @@ router.get('/expenseAllRecords',verify, async (request, response) => {
                 obj.conveyanceVoucherAmount = expenseQueryResult.rows[i].conveyance_amount__c;
                 obj.createdDate = strDate;
                 if(expenseQueryResult.rows[i].isherokueditbuttondisabled__c)
-                  obj.editButton = '<button    data-toggle="modal" data-target="#popupEdit" class="btn btn-primary expIdEditMode"   id="edit'+expenseQueryResult.rows[i].sfid+'" >Edit</button>';
+                  obj.editButton = '<button   disabled data-toggle="modal" data-target="#popupEdit" class="btn btn-primary expIdEditMode"   id="edit'+expenseQueryResult.rows[i].sfid+'" >Edit</button>';
                 else
                   obj.editButton = '<button    data-toggle="modal" data-target="#popupEdit" class="btn btn-primary expIdEditMode"   id="edit'+expenseQueryResult.rows[i].sfid+'" >Edit</button>';
-                obj.approvalButton = '<button   class="btn btn-primary expIdApproval"  style="color:white;" id="'+expenseQueryResult.rows[i].sfid+'" >Submit For Approval</button>';
+
+                console.log('expenseQueryResult.rows[i].isHerokuapprovalbuttondisabled__c  '+expenseQueryResult.rows[i].isherokuapprovalbuttondisabled__c);
+                if(expenseQueryResult.rows[i].isherokuapprovalbuttondisabled__c)
+                    obj.approvalButton = '<button  disabled class="btn btn-primary expIdApproval"  style="color:white;" id="'+expenseQueryResult.rows[i].sfid+'" >Submit For Approval</button>';
+                else
+                  obj.approvalButton = '<button   class="btn btn-primary expIdApproval"  style="color:white;" id="'+expenseQueryResult.rows[i].sfid+'" >Submit For Approval</button>';
                 expenseList.push(obj);
                 /* disabled="'+expenseQueryResult.rows[i].isherokueditbuttondisabled__c+'" */
               }
@@ -851,6 +857,8 @@ router.post('/sendForApproval',verify,(request, response) => {
     let approvalStatus = 'Pending';
     let updateExpenseQuery = 'UPDATE salesforce.Milestone1_Expense__c SET '+  
                              'isHerokuEditButtonDisabled__c = true , '+
+                             'isHerokuFeedbackButtonDisabled__c = false ,'+ 
+                             'isHerokuApprovalButtonDisabled__c = true ,'+
                              'approval_status__c = \''+approvalStatus+'\' '+
                              'WHERE sfid = $1';
      console.log('updateExpenseQuery :  '+updateExpenseQuery);
@@ -924,8 +932,14 @@ router.get('/getpettycashlist',verify,(request, response) => {
               pettyCashQueryResult.rows.forEach((eachRecord) => {
                 let obj = {};
                 let createdDate = new Date(eachRecord.createddate);
+                createdDate.setHours(createdDate.getHours() + 5);
+                createdDate.setMinutes(createdDate.getMinutes() + 30);
                 let strDate = createdDate.toLocaleString();
-                let strBillDate = new Date(eachRecord.bill_date__c).toLocaleString();
+                let strBillDate = '';
+                if(eachRecord.bill_date__c !=  null)
+                  strBillDate = eachRecord.bill_date__c.toISOString().split('T')[0];
+                else
+                  strBillDate = '';
                 obj.sequence = i;
                 obj.name = '<a href="#" class="pettyCashTag" id="'+eachRecord.sfid+'" >'+eachRecord.name+'</a>';
                 obj.billNo = eachRecord.bill_no__c;
@@ -1002,7 +1016,7 @@ router.get('/getconveyancelist' ,verify,(request,response) => {
   let expenseId = request.query.expenseId;
   console.log('expenseId conveyance '+expenseId);
   pool
-  .query('SELECT sfid, name, Mode_of_Conveyance__c, Purpose_of_Travel__c ,createddate from salesforce.Conveyance_Voucher__c WHERE expense__c = $1',[expenseId])
+  .query('SELECT sfid, name, Mode_of_Conveyance__c, amount__c, Purpose_of_Travel__c ,createddate from salesforce.Conveyance_Voucher__c WHERE expense__c = $1',[expenseId])
   .then((conveyanceQueryResult)=>{
     console.log('conveyanceQueryResult :'+conveyanceQueryResult.rowCount);
     if(conveyanceQueryResult.rowCount>0)
@@ -1012,10 +1026,13 @@ router.get('/getconveyancelist' ,verify,(request,response) => {
       conveyanceQueryResult.rows.forEach((eachRecord) => {
         let obj = {};
         let createdDate = new Date(eachRecord.createddate);
+        createdDate.setHours(createdDate.getHours() + 5);
+        createdDate.setMinutes(createdDate.getMinutes() + 30);
         let strDate = createdDate.toLocaleString();
         obj.sequence = i;
         obj.name = '<a href="#" class="conveyanceTag" id="'+eachRecord.sfid+'" >'+eachRecord.name+'</a>';
-        obj.TravellingPurpose = eachRecord.purpose_of_travel__c;
+        obj.travellingPurpose = eachRecord.purpose_of_travel__c;
+        obj.amount = eachRecord.amount__c;
         obj.createDdate = strDate;
         obj.modeOfTravel = eachRecord.mode_of_conveyance__c;
         
@@ -1053,7 +1070,7 @@ router.get('/getConveyanceVoucherDetail',verify,(request, response) => {
 
   let  conveyanceId= request.query.conveyanceId;
   console.log('conveyanceId  : '+conveyanceId);
-  let queryText = 'SELECT conVoucher.sfid, conVoucher.amount__c, conVoucher.mode_of_conveyance__c,conVoucher.purpose_of_travel__c, conVoucher.name as conveyancename ,exp.name as expname,conVoucher.createddate '+
+  let queryText = 'SELECT conVoucher.sfid,conVoucher.activity_code__c, conVoucher.Kms_Travelled__c,conVoucher.project_tasks__c ,conVoucher.heroku_image_url__c, conVoucher.amount__c, conVoucher.mode_of_conveyance__c,conVoucher.purpose_of_travel__c, conVoucher.name as conveyancename ,exp.name as expname,conVoucher.createddate '+
                    'FROM salesforce.Conveyance_Voucher__c conVoucher '+ 
                    'INNER JOIN salesforce.Milestone1_Expense__c exp '+
                    'ON conVoucher.Expense__c =  exp.sfid '+

@@ -178,7 +178,8 @@
         },
         tableDidUpdate: () => {
         console.log('table did update');
- //        anchorClickFunctionalities();
+           anchorClickFunctionalities();
+           addtionalFunctionalities();
         
         },
         tableWillUnmount: () => console.log('table will unmount'),
@@ -224,7 +225,7 @@
                     event.stopPropagation();
                     $('#foodChargeModal').modal('show');
                     let tourbillId = this.id;
-                    alert('tourbillId  '+tourbillId);
+                  //  alert('tourbillId  '+tourbillId);
                     $('#foodChargeModal').modal('show');
                     $.ajax({
                         url : '/expense/tourBillClaim/gettelephoneFoodChargeDetail',
@@ -238,13 +239,16 @@
                         }
                     })
                     .done((response) => {
-                        console.log('BoardingDetail  : '+JSON.stringify(response));
+                        console.log('telephone food Detail  : '+JSON.stringify(response));
                         $('#detailLoadingSpinner').hide();
                         if(response.length > 0)
                         {
                           let foodChargeRecord = response[0];
                           let htmlTable = '';
-                          let strCreatedDate = new Date(foodChargeRecord.createddate).toLocaleString();
+                          let createdDated = new Date(foodChargeRecord.createddate);
+                          createdDated.setHours(createdDated.getHours() + 5);
+                          createdDated.setMinutes(createdDated.getMinutes() + 30);
+                          let strCreatedDate = createdDated.toLocaleString();
                           htmlTable += '<tr>';
                               htmlTable += '<td><strong>Name</strong></td>';
                               htmlTable += '<td>'+foodChargeRecord.chargegname+'</td>';
@@ -260,8 +264,6 @@
                           htmlTable += '</tr>';
 
                          
-
-
                           htmlTable += '<tr>';  
                           htmlTable += '<td><strong>Activity Code</strong></td>';
                           if(foodChargeRecord.activity_code__c != null)
@@ -285,11 +287,11 @@
                           htmlTable += '</tr>';
 
                           htmlTable += '<tr>';       
-                          htmlTable += '<td><strong>View Image</strong></td>';
-                          if(airRailBusRecord.heroku_image_url__c != null && foodChargeRecord.heroku_image_url__c != '')
-                              htmlTable += '<td><a target="_blank" href="'+foodChargeRecord.heroku_image_url__c+'" >Click Here</a></td>';
-                          else
-                              htmlTable += '<td></td>';
+                            htmlTable += '<td><strong>View Image</strong></td>';
+                            if(foodChargeRecord.heroku_image_url__c != null && foodChargeRecord.heroku_image_url__c != '')
+                                htmlTable += '<td><a target="_blank" href="'+foodChargeRecord.heroku_image_url__c+'" >Click Here</a></td>';
+                            else
+                                htmlTable += '<td></td>';
                           
                           htmlTable += '<td><strong>Remarks</strong></td>';
                           htmlTable += '<td>'+foodChargeRecord.remarks__c+'</td>';
@@ -307,14 +309,7 @@
                       console.log('error  : '+error);
                     })
             
-
-
-
-                    
             });
-
-
-
     }
     
     function addtionalFunctionalities()
