@@ -71,6 +71,8 @@ router.get('/pldFormsApprovalList', verify, (request, response) => {
                 for(let i=0, len = customApprovalResult.rows.length ; i < len ; i++ )
                 {
                     let crDate = new Date(customApprovalResult.rows[i].createddate);
+                    crDate.setDate(crDate.getDate() + 5);
+                    crDate.setMinutes(crDate.getMinutes() + 30);
                     let strDate = crDate.toLocaleString();
                     let obj = {};
                     obj.sequence = (i+1);
@@ -96,7 +98,7 @@ router.get('/pldFormsApprovalList', verify, (request, response) => {
 
 
 
-router.post('/pldApprovalFeedback',verify, (request,response) => {
+router.post('/pldApprovalFeedback',verify, async(request,response) => {
 
     let objUser = request.user;
     console.log('Hello Approval  ');
@@ -112,12 +114,25 @@ router.post('/pldApprovalFeedback',verify, (request,response) => {
     }
     console.log('statusToSet  : '+statusToSet);
     
+    await
+    pool
+    .query('UPDATE salesforce.Project_Survey_Response__c SET Approval_Status__c = $1 WHERE sfid = $2',[statusToSet, body.responseId])
+    .then((surveyResponseQueryResult) =>{
+          console.log('surveyResponseQueryResult  : '+JSON.stringify(surveyResponseQueryResult));
+    })
+    .catch((surveyResponseQueryError) =>{
+        console.log('surveyResponseQueryError  : '+surveyResponseQueryError);
+    })
+
+
+
     let updateQueryText = 'UPDATE salesforce.Custom_Approval__c SET  '+
                           'status__c = \''+statusToSet+'\' '+
                           'WHERE Assign_To__c = $1 AND Approval_Type__c = $2 AND expense__c = $3 ';
 
     console.log('updateQueryText  : '+updateQueryText);
     console.log('objUser.Id  :  '+objUser.Id+' body.responseId  : '+body.responseId);
+    await
     pool
     .query(updateQueryText,[objUser.sfid, 'PldForm', body.responseId])
     .then((approvalFeedbackResult) => {
@@ -128,6 +143,9 @@ router.post('/pldApprovalFeedback',verify, (request,response) => {
         console.log('approvalFeedbackError  '+approvalFeedbackError.stack);
         response.send('Error');
     })
+
+
+
  
 });
 

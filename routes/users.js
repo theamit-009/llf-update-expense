@@ -69,7 +69,7 @@ router.get('/viewResponses',verify,(request,response)=>{
   var userId = request.user.sfid; 
 
   pool
-  .query('SELECT psr.sfid, psr.name, psr.createdDate, ca.status__c from salesforce.Project_Survey_Response__c as psr LEFT JOIN salesforce.Custom_Approval__c as ca ON  psr.sfid = ca.expense__c WHERE Project_Library__c = $1 AND Response_By__c = $2',[pldFormId, userId])
+  .query('SELECT psr.sfid, psr.name, psr.createdDate, psr.approval_status__c,  ca.status__c from salesforce.Project_Survey_Response__c as psr LEFT JOIN salesforce.Custom_Approval__c as ca ON  psr.sfid = ca.expense__c WHERE Project_Library__c = $1 AND Response_By__c = $2',[pldFormId, userId])
   .then((pldResponseQueryResult) => {
     console.log('pldResponseQueryResult  '+JSON.stringify(pldResponseQueryResult.rows));
     if(pldResponseQueryResult.rowCount > 0)
@@ -757,41 +757,165 @@ router.get('/pldReports',verify,(request, response) => {
 })
 
 
-router.post('/sendResponseForApproval',verify, (request, response) => {
+router.get('/test',(request, response) =>{
+
+      pool
+      .query('SELECT survey.Project__c, pro.project_manager__c   FROM salesforce.Project_Survey_Response__c as survey INNER JOIN salesforce.Milestone1_Project__c as pro ON survey.project__c = pro.sfid WHERE survey.sfid = $1',['a1n0p0000008vyFAAQ'])
+      .then((surveyResponseQueryResult) =>{
+            console.log('surveyResponseQueryResult  : '+JSON.stringify(surveyResponseQueryResult));
+            if(surveyResponseQueryResult.rowCount > 0)
+            {
+                let projectManagerId = surveyResponseQueryResult.rows[0].project_manager__c;
+                console.log('projectManagerId  : '+projectManagerId);
+            }
+            response.send(surveyResponseQueryResult.rows);
+            
+      })
+      .catch((surveyResponseQueryError) =>{
+          console.log('surveyResponseQueryError  : '+surveyResponseQueryError);
+          response.send([]);
+      })
+
+})
+
+
+router.post('/sendResponseForApproval',verify, async(request, response) => {
   console.log('Expense request.user '+JSON.stringify(request.user));
   let objUser = request.user;
   let reponseId = request.body.reponseId;
   console.log('reponseId   : '+reponseId);
 
   let managerId = '';
-    pool
-    .query('SELECT manager__c FROM salesforce.Team__c WHERE sfid IN (SELECT team__c FROM salesforce.Team_Member__c WHERE Representative__c = $1)',[objUser.sfid])
-    .then((teamMemberQueryResult) => {
-          console.log('teamMemberQueryResult   : '+JSON.stringify(teamMemberQueryResult.rows));
-          if(teamMemberQueryResult.rowCount > 0)
-          {
-            let lstManagerId = teamMemberQueryResult.rows.filter((eachRecord) => {
-                                    if(eachRecord.manager__c != null)
-                                        return eachRecord;
-                              })
-            managerId = lstManagerId[0].manager__c;
-            console.log('managerId   : '+managerId);
+  if(objUser.isManager)
+  {
+    console.log('Manager is Sending for Approval');
+      await
+      pool
+      .query('UPDATE salesforce.Project_Survey_Response__c SET Approval_Status__C = $1 WHERE sfid = $2',['Pending',reponseId])
+      .then((surveyResponseQueryResult) =>{
+            console.log('surveyResponseQueryResult  : '+JSON.stringify(surveyResponseQueryResult));
+      })
+      .catch((surveyResponseQueryError) =>{
+          console.log('surveyResponseQueryError  : '+surveyResponseQueryError);
+      })
 
-            pool.query('INSERT INTO salesforce.Custom_Approval__c (Approval_Type__c,Submitter__c, Assign_To__c ,Expense__c, Comment__c, Status__c, Record_Name__c,amount__c) values($1, $2, $3, $4, $5, $6, $7, $8) ',['PldForm',objUser.sfid, managerId, reponseId, '', 'Pending', '', 0 ])
-            .then((customApprovalQueryResult) => {
-                    console.log('customApprovalQueryResult  '+JSON.stringify(customApprovalQueryResult));
-                    response.send('Sent For Approval !');
-            })
-            .catch((customApprovalQueryError) => {
-                    console.log('customApprovalQueryError  '+customApprovalQueryError.stack);
-                    response.send('Error Occured while sending for approval !');
-            })
-          }
-    })
-    .catch((teamMemberQueryError) => {
-          console.log('teamMemberQueryError   :  '+teamMemberQueryError.stack);
-          response.send('Error Occured while sending for approval !');
-    })
+
+
+      await
+      pool
+      .query('SELECT survey.Project__c, pro.project_manager__c   FROM salesforce.Project_Survey_Response__c as survey INNER JOIN salesforce.Milestone1_Project__c as pro ON survey.project__c = pro.sfid WHERE survey.sfid = $1',[reponseId])
+      .then((surveyResponseQueryResult) =>{
+            console.log('surveyResponseQueryResult  : '+JSON.stringify(surveyResponseQueryResult.rows));
+            if(surveyResponseQueryResult.rowCount > 0)
+            {
+                let projectManagerId = surveyResponseQueryResult.rows[0].project_manager__c;
+                console.log('projectManagerId  : '+projectManagerId);
+
+                pool.query('INSERT INTO salesforce.Custom_Approval__c (Approval_Type__c,Submitter__c, Assign_To__c ,Response_Form__c, Comment__c, Status__c, Record_Name__c,amount__c) values($1, $2, $3, $4, $5, $6, $7, $8) ',['PldForm',objUser.sfid, projectManagerId, reponseId, '', 'Pending', '', 0 ])
+                .then((customApprovalQueryResult) => {
+                        console.log('customApprovalQueryResult  '+JSON.stringify(customApprovalQueryResult));
+                        response.send('Sent For Approval !');
+                })
+                .catch((customApprovalQueryError) => {
+                        console.log('customApprovalQueryError  '+customApprovalQueryError.stack);
+                        response.send('Error Occured while sending for approval !');
+                })
+
+            }
+            
+      })
+      .catch((surveyResponseQueryError) =>{
+          console.log('surveyResponseQueryError  : '+surveyResponseQueryError);
+      })
+
+  }
+  else
+  {
+    console.log('RP is Sending for Approval');
+      await
+      pool
+      .query('UPDATE salesforce.Project_Survey_Response__c SET Approval_Status__C = $1 WHERE sfid = $2',['Pending',reponseId])
+      .then((surveyResponseQueryResult) =>{
+            console.log('surveyResponseQueryResult  : '+JSON.stringify(surveyResponseQueryResult));
+      })
+      .catch((surveyResponseQueryError) =>{
+          console.log('surveyResponseQueryError  : '+surveyResponseQueryError);
+      })
+
+      await
+      pool
+      .query('SELECT manager__c FROM salesforce.Team__c WHERE sfid IN (SELECT team__c FROM salesforce.Team_Member__c WHERE Representative__c = $1)',[objUser.sfid])
+      .then((teamMemberQueryResult) => {
+            console.log('teamMemberQueryResult   : '+JSON.stringify(teamMemberQueryResult.rows));
+            if(teamMemberQueryResult.rowCount > 0)
+            {
+              let lstManagerId = teamMemberQueryResult.rows.filter((eachRecord) => {
+                                      if(eachRecord.manager__c != null)
+                                          return eachRecord;
+                                })
+              if(lstManagerId.length > 0)
+              {
+                managerId = lstManagerId[0].manager__c;
+              }
+              
+              console.log('managerId   : '+managerId);
+
+              if(managerId != null && managerId != '')
+              {
+                 
+                console.log('Manager Id is present');
+                 pool.query('INSERT INTO salesforce.Custom_Approval__c (Approval_Type__c,Submitter__c, Assign_To__c ,Expense__c, Comment__c, Status__c, Record_Name__c,amount__c) values($1, $2, $3, $4, $5, $6, $7, $8) ',['PldForm',objUser.sfid, managerId, reponseId, '', 'Pending', '', 0 ])
+                  .then((customApprovalQueryResult) => {
+                          console.log('customApprovalQueryResult  '+JSON.stringify(customApprovalQueryResult));
+                          response.send('Sent For Approval !');
+                  })
+                  .catch((customApprovalQueryError) => {
+                          console.log('customApprovalQueryError  '+customApprovalQueryError.stack);
+                          response.send('Error Occured while sending for approval !');
+                  })
+              }
+              else
+              {
+                  console.log('Manager Id is not present  '+reponseId);
+                  pool
+                  .query('SELECT survey.Project__c, pro.project_manager__c   FROM salesforce.Project_Survey_Response__c as survey INNER JOIN salesforce.Milestone1_Project__c as pro ON survey.project__c = pro.sfid WHERE survey.sfid = $1',[reponseId])
+                  .then((surveyResponseQueryResult) =>{
+                        console.log('surveyResponseQueryResult  : '+JSON.stringify(surveyResponseQueryResult.rows));
+                        if(surveyResponseQueryResult.rowCount > 0)
+                        {
+                            let projectManagerId = surveyResponseQueryResult.rows[0].project_manager__c;
+                            console.log('projectManagerId  : '+projectManagerId);
+            
+                            pool.query('INSERT INTO salesforce.Custom_Approval__c (Approval_Type__c,Submitter__c, Assign_To__c ,Response_Form__c, Comment__c, Status__c, Record_Name__c,amount__c) values($1, $2, $3, $4, $5, $6, $7, $8) ',['PldForm',objUser.sfid, projectManagerId, reponseId, '', 'Pending', '', 0 ])
+                            .then((customApprovalQueryResult) => {
+                                    console.log('customApprovalQueryResult  '+JSON.stringify(customApprovalQueryResult));
+                                    response.send('Sent For Approval !');
+                            })
+                            .catch((customApprovalQueryError) => {
+                                    console.log('customApprovalQueryError  '+customApprovalQueryError.stack);
+                                    response.send('Error Occured while sending for approval !');
+                            })
+            
+                        }
+                        
+                  })
+                  .catch((surveyResponseQueryError) =>{
+                      console.log('surveyResponseQueryError  : '+surveyResponseQueryError);
+                  })
+
+              }
+
+             
+            }
+      })
+      .catch((teamMemberQueryError) => {
+            console.log('teamMemberQueryError   :  '+teamMemberQueryError.stack);
+            response.send('Error Occured while sending for approval !');
+      })
+
+  }
+
+  
 });
 
 

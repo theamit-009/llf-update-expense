@@ -844,7 +844,7 @@ router.get('/fetchActivityCodes', verify,async (request, response) => {
 
 
 
-router.post('/sendForApproval',verify,(request, response) => {
+router.post('/sendForApproval',verify,async (request, response) => {
     console.log('hekllo');
     let objUser = request.user;
     let expenseId = request.body.selectedExpenseId;
@@ -863,6 +863,7 @@ router.post('/sendForApproval',verify,(request, response) => {
                              'WHERE sfid = $1';
      console.log('updateExpenseQuery :  '+updateExpenseQuery);
 
+    await
     pool.query(updateExpenseQuery,[expenseId])
     .then((expenseUpdateQueryResult) => {
           console.log('expenseUpdateQueryResult  : '+JSON.stringify(expenseUpdateQueryResult));
@@ -873,6 +874,7 @@ router.post('/sendForApproval',verify,(request, response) => {
 
 
     let managerId = '';
+    await
     pool
     .query('SELECT manager__c FROM salesforce.Team__c WHERE sfid IN (SELECT team__c FROM salesforce.Team_Member__c WHERE Representative__c = $1)',[objUser.sfid])
     .then((teamMemberQueryResult) => {
@@ -883,16 +885,51 @@ router.post('/sendForApproval',verify,(request, response) => {
                                     if(eachRecord.manager__c != null)
                                         return eachRecord;
                               })
-            managerId = lstManagerId[0].manager__c;
-            console.log('managerId   : '+managerId);
 
-            pool.query('INSERT INTO salesforce.Custom_Approval__c (Approval_Type__c,Submitter__c, Assign_To__c ,Expense__c, Comment__c, Status__c, Record_Name__c,amount__c) values($1, $2, $3, $4, $5, $6, $7, $8) ',['Expense',objUser.sfid, managerId, expenseId, comment, 'Pending', expenseName, totalAmount ])
-            .then((customApprovalQueryResult) => {
-                    console.log('customApprovalQueryResult  '+JSON.stringify(customApprovalQueryResult));
-            })
-            .catch((customApprovalQueryError) => {
-                    console.log('customApprovalQueryError  '+customApprovalQueryError.stack);
-            })
+            if(lstManagerId.length > 0)
+            {
+              console.log('Expense Manager is Present in Team ');
+
+              managerId = lstManagerId[0].manager__c;
+              console.log('managerId   : '+managerId);
+  
+              pool.query('INSERT INTO salesforce.Custom_Approval__c (Approval_Type__c,Submitter__c, Assign_To__c ,Expense__c, Comment__c, Status__c, Record_Name__c,amount__c) values($1, $2, $3, $4, $5, $6, $7, $8) ',['Expense',objUser.sfid, managerId, expenseId, comment, 'Pending', expenseName, totalAmount ])
+              .then((customApprovalQueryResult) => {
+                      console.log('customApprovalQueryResult  '+JSON.stringify(customApprovalQueryResult));
+              })
+              .catch((customApprovalQueryError) => {
+                      console.log('customApprovalQueryError  '+customApprovalQueryError.stack);
+              })
+            }
+            else
+            {
+              console.log('Expense Manager is not Present in Team ');
+
+                pool
+                .query('SELECT exp.project_name__c, pro.project_manager__c   FROM salesforce.Milestone1_Expense__c as exp INNER JOIN salesforce.Milestone1_Project__c as pro ON exp.project_name__c = pro.sfid WHERE exp.sfid = $1',[expenseId])
+                .then((expenseQueryResult) =>{
+                        console.log('expenseQueryResult  : '+JSON.stringify(expenseQueryResult.rows));
+                        if(expenseQueryResult.rowCount > 0)
+                        {
+                            let projectManagerId = expenseQueryResult.rows[0].project_manager__c;
+                            console.log('projectManagerId  : '+projectManagerId);
+            
+                            pool.query('INSERT INTO salesforce.Custom_Approval__c (Approval_Type__c,Submitter__c, Assign_To__c ,Expense__c, Comment__c, Status__c, Record_Name__c,amount__c) values($1, $2, $3, $4, $5, $6, $7, $8) ',['Expense',objUser.sfid, projectManagerId, expenseId, comment, 'Pending', expenseName, totalAmount ])
+                            .then((customApprovalQueryResult) => {
+                                    console.log('customApprovalQueryResult  '+JSON.stringify(customApprovalQueryResult));
+                            })
+                            .catch((customApprovalQueryError) => {
+                                    console.log('customApprovalQueryError  '+customApprovalQueryError.stack);
+                            })
+            
+                        }
+                        
+                })
+                .catch((expenseQueryError) =>{
+                      console.log('expenseQueryError  : '+expenseQueryError);
+                })
+            }
+            
           }
     })
     .catch((teamMemberQueryError) => {

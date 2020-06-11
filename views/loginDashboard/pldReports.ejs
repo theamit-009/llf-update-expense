@@ -32,7 +32,7 @@
 <div class="row mt-5">
     <div class="col-md-8 m-auto">
       <div class="card card-body">
-          <h4><center>Available PLD Forms </center></h4>
+          <h4><center>Available M &amp; E Forms </center></h4>
           <div  class="table-responsive">
             <div id="spinnerPldForm">
                 <center> <img src="/spinner-gif-transparent-background-14.gif" />  </center>
@@ -196,11 +196,11 @@
                                 htmlResponsesTable += '<td>'+eachRecord.name+' </td>';
                                 htmlResponsesTable += '<td>'+dateTime+' </td>';
                                 htmlResponsesTable += '<td><button class="btn btn-primary submitFormForApproval" id="'+eachRecord.sfid+'" >Submit For Approval</a> </td>';
-                                if(eachRecord.status__c == 'Approved' || eachRecord.status__c == 'Rejected' || eachRecord.status__c != 'Pending' )
-                                  htmlResponsesTable += '<td>'+eachRecord.status__c+'</td>';
+                                if(eachRecord.approval_status__c == 'Approved' || eachRecord.approval_status__c == 'Rejected' || eachRecord.approval_status__c == 'Pending' )
+                                  htmlResponsesTable += '<td>'+eachRecord.approval_status__c+'</td>';
                                 else
                                 htmlResponsesTable += '<td></td>';
-                                if(eachRecord.status__c != null && eachRecord.status__c != 'Pending' )
+                                if(eachRecord.approval_status__c != null && eachRecord.approval_status__c != 'Pending' )
                                 {
                                   htmlResponsesTable += '<td><a class="btn btn-primary " href="https://llfdev1-llf1.cs74.force.com/responsepdf?Id='+eachRecord.sfid+'" target="_blank" style="color:white;"  >Preview</a> </td>';
                                   htmlResponsesTable += '<td><button class="btn btn-danger deleteResponse" id="'+eachRecord.sfid+'" >Delete</a> </td>';
